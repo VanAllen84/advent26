@@ -19,7 +19,7 @@ Dazu gehören gedruckte Teile (24 Faltkarten, Beipackzettel, Röllchen, Päckche
 |---|---|
 | **LIVE** | https://kalender2026.tkagel.de |
 
-Stand dieser Beschreibung: November 2026, Service-Worker-Version `v1795424298`.
+Stand dieser Beschreibung: November 2026, Service-Worker-Version `v1795431329`.
 
 ---
 
@@ -92,7 +92,10 @@ Stand dieser Beschreibung: November 2026, Service-Worker-Version `v1795424298`.
 ├── icon-192.png, icon-512.png, apple-touch-icon.png   App-Symbole
 ├── data.js               Aufgabentexte der 24 Karten (Base64, siehe Abschnitt 11)
 ├── er.js                 Thilos Bewertungen (A/B/C je Aufgabe und Alternative)
+├── wetter.js             Wetter-Modul (Abruf, Klassen, Platzhalter ersetzen)  [Wetter-Ergänzung, Abschnitt 7.9]
+├── wetter-texte.js       Textbausteine je Wetter für die Geschichten (Platzhalter {{w:…}})
 ├── er-editor.html        Werkzeug zum Eintragen von er.js (nur in TEST)
+├── ton/                  Optionale Töne: knarren.mp3 (Tür), wirbel.mp3 (Wind beim Wirbel)
 ├── story-day1.js … story-day24.js   Die 24 Geschichten (je drei Stimmungen)
 ├── bilder/
 │   ├── landing.jpg           Bild der Startseite und der Sperre
@@ -276,6 +279,58 @@ Titel und Symbol wechseln mit der Seite („Intro“, „Die Türchen“, „N. 
 - **Lieblingsgeschichten (Herz):** Unter jeder Geschichte ein Herz-Knopf „Diese Geschichte gefällt mir“. Ein Herz je Türchen und Stimmung; weitere Stimmungen kann sie erst ab dem 25.12. lesen und dann auch dort ein Herz vergeben (dieselbe Geschichte kann also mehrfach in der Liste stehen). Herzchen erscheinen auf der Kachel; ab dem 25.12. zeigt die Übersicht den Bereich „Meine Lieblingsgeschichten“ (Sprungknöpfe zu Türchen und Stimmung).
 - **Tür-Knarren:** Liegt die Datei `ton/knarren.mp3` im Repository, spielt sie beim Öffnen eines Türchens (immer aktiv, kein Schalter; wer es leise will, stellt die Lautstärke am Handy herunter). Fehlt die Datei, passiert nichts (kein Fehler). Die Datei steht bewusst **nicht** in der Vorab-Liste des Service Workers, damit eine fehlende Datei die Installation nicht verhindert. Hinweis: Normales Audio-Abspielen wird vom iPhone-Stumm-Schalter meist nicht unterdrückt (nicht auf einem echten Gerät geprüft).
 - **Wirbel-Wind (optional):** Liegt `ton/wirbel.mp3` im Repository, spielt sie beim Wirbel-Übergang von der Stimmungswahl in die Geschichte. Ebenfalls ohne Schalter; fehlt die Datei, passiert nichts.
+
+### 7.9 Wetter in den Geschichten (Dezember-Ergänzung)
+**Status: in TEST und LIVE umgesetzt.**
+
+#### Warum
+Viele Geschichten spielen an einem bestimmten Tag mit einem bestimmten Wetter: Schnee am 13., Frost am 8., Sturm am 18. Liest Anja so eine Geschichte bei Sonne oder bei Regen, fühlt sich der Satz „Draußen fällt der Schnee“ falsch an und holt sie aus der Geschichte. Deshalb passen sich die Wettersätze dem echten Wetter an ihrem Wohnort an, damit die Geschichte zu dem passt, was sie gerade aus dem Fenster sieht.
+
+#### Was Anja davon bemerkt
+- Wetterstellen, die nebenbei vorkommen („Draußen prasselt der Regen“, „der Himmel ist grau“), zeigen das echte Wetter. Sie sieht keinen Hinweis darauf, dass Text getauscht wurde.
+- In vier Türchen (13, 14, 18 und der dritten Stimmung von Türchen 10) ändert sich eine ganze Szene. Beispiel: Türchen 13 ist im Original ein Schneetag mit Schlittenhügel. Regnet es, wird daraus ein Regentag mit Matsch-Rutschbahn; ist es trocken und kalt, ein Tag mit Drachen und Rollen im Gras. Ablauf, Gespräche und Höhepunkte bleiben gleich, nur die Kulisse passt zum Wetter.
+- Weiß die App das Wetter nicht (kein Netz, Abruf gescheitert), läuft immer der Originaltext. Es gibt keine Fehlermeldung.
+- Türchen 8 (Sternenhimmel) bleibt bewusst unverändert, weil der Sternenhimmel der Kern der Geschichte ist.
+
+#### Woher das Wetter kommt
+Open-Meteo (frei nutzbar, kein Schlüssel, keine Anmeldung), stündlich, für Grevenbroich. Das ist dieselbe Quelle wie die Wolke. Es werden nur die Koordinaten des Ortes übertragen, keine Daten über Anja oder ihr Gerät. `wetter.js` ruft beim Start einmal die Werte des Tages ab (Wettercode und Temperatur je Stunde) und merkt sie sich im Browser (`adventWetter26`). Nach 45 Minuten wird neu abgerufen; ohne Netz gelten die gemerkten Werte bis zu 6 Stunden. Gelesen wird die Stunde, in der Anja gerade liest.
+
+**Wetterklassen:** `r` Regen (auch Niesel, Schauer, Gewitter), `s` Schnee, `n` Nebel, `k` klar oder heiter, `b` bedeckt, `kf` klar mit Frost (Temperatur ≤ 0,5 °C), `x` unbekannt.
+
+#### Wie es umgesetzt ist
+- **Marken im Text:** In den Dateien `story-dayN.js` ist jeder Wettersatz durch eine Marke ersetzt, z. B. `{{w:d5_boden}}`. In `wetter-texte.js` steht zu jeder Marke der Text je Wetterklasse. Fehlt eine Klasse, gilt die neutrale (`x`); Nebel und Schnee fallen zur Not auf `b` zurück, Frost auf `k`.
+- **Drei Arten von Marken:**
+  - `w` zeigt das Wetter **jetzt**. Kommt der Abruf erst nach dem Aufbau der Seite, tauscht `wetterAktualisieren` nur den Text aus, die Seite springt nicht.
+  - `p` zeigt das Wetter beim **ersten Lesen** des Türchens und hält es fest (`adventWetterTag26`). So bleibt eine Szene stehen, wenn Anja dieselbe Geschichte später noch einmal liest. Das gilt für die ganzen Szenen in den Türchen 10, 13 und 18.
+  - `v` liest das festgehaltene Wetter des **Vortags**. So greift Türchen 14 auf, was gestern passiert ist („Schnee von gestern“, „Regen von gestern“, „kalte Luft von gestern“). Fehlt der Vortag (z. B. Türchen 13 nicht gelesen), gilt das Original.
+- **Einbau in `index.html`:** Die Funktion, die die Geschichte anzeigt, ruft `wetterErsetzen(text, tag)` auf und ersetzt die Marken durch `<span class="wx" …>`. Das Modul `wetter.js` wird am Seitenende geladen. Fehlt es, werden die Marken entfernt und die Geschichte bleibt lesbar.
+- **Temperatur:** Ein Baustein darf `[[T]]` enthalten; das wird durch die Temperatur in Worten ersetzt („minus drei Grad“).
+- **Service Worker:** `wetter.js` und `wetter-texte.js` stehen in der Vorab-Liste von `sw.js`, damit die Seite auch offline funktioniert.
+
+#### Welche Türchen wie reagieren
+| Türchen | Verhalten |
+|---|---|
+| 1 bis 7, 9, 12, 15, 17, 20 bis 24 | Einzelne Wettersätze folgen dem echten Wetter (insgesamt 75 Stellen). |
+| 10 (Intensiv) | Nebel-Nachmittag im Original (bei Nebel oder unbekanntem Wetter). Bei Regen oder trocken-kalt eine eigene Szene im Garten. |
+| 11 | Nieselregen, Heimkehr und Geruch passen sich dem Wetter an. |
+| 13 | Schneetag im Original (Schnee oder unbekannt). Fassung R für Regen (Matsch-Rutschbahn, Wasserschlacht, Staudamm), Fassung T für klar, Frost, bedeckt und Nebel (Hügel zum Rollen, Drachen, Laubschlacht). In allen drei Stimmungen. |
+| 14 | Greift das Wetter von Türchen 13 auf (`v`) und passt den heutigen Himmel an. |
+| 15 bis 17 | Keine Schnee-Rückbezüge nötig; einzelne Wettersätze sind angepasst. |
+| 18, 19 | Türchen 18 ist im Original ein Sturmtag mit Stromausfall (nur bei unbekanntem Wetter). Bei bekanntem Wetter fällt der Strom wegen Baggerarbeiten vor der Schule aus (der Hausmeister warnt davor), dazu passen Regen oder kalte Stille. Türchen 19 passt seinen Himmel dem Wetter an. |
+| 8 | Unverändert (Sternenhimmel ist die Handlung). |
+
+Insgesamt gibt es 133 Bausteine in 72 Fassungen (24 Türchen mal drei Stimmungen).
+
+#### Vorschau (nur zum Prüfen)
+Adresse mit Zusatz öffnen, z. B. `…/index.html?wetter=regen`. Möglich sind `regen`, `schnee`, `nebel`, `klar`, `frost`, `bewoelkt`, `neutral`; dazu optional `&temp=-3`. Dann zeigen alle Geschichten dieses Wetter. Die Vorschau schreibt nichts in `adventWetterTag26`. Anja sieht davon nichts, solange sie die Adresse nicht mit dem Zusatz öffnet.
+
+#### Neue Bausteine anlegen oder ändern
+Satz in `story-dayN.js` durch `{{w:dN_name}}` ersetzen und in `wetter-texte.js` einen Eintrag `dN_name` mit `x`, `r`, `k`, `b` (optional `n`, `s`, `kf`) anlegen. Bei Änderungen an Texten danach `VERSION` in `sw.js` erhöhen. Die Skripte `apply.py` und `tok/` im Archiv `tools_TEST.zip` erzeugen Geschichten und Texte aus den Originalen und prüfen sie.
+
+#### Wenn etwas nicht stimmt
+- Die Geschichte zeigt das falsche Wetter: Wetter prüfen (Vorschau-Adresse mit `?wetter=…`) und `wetter-texte.js` ansehen. Nach einem Wechsel des Wetters im selben Türchen bleiben nur `p`-Stellen stehen, das ist gewollt.
+- Es erscheint ein Text wie `{{p:…}}`: `wetter.js` konnte nicht geladen werden oder ist nicht aktuell. Die Dateien `wetter.js`, `wetter-texte.js` und `sw.js` gemeinsam hochladen.
+- Das festgehaltene Wetter eines Tages soll neu gelesen werden: Im Browser den Speichereintrag `adventWetterTag26` löschen (Entwicklerwerkzeuge, Anwendung/Speicher). `?reset=1` löscht dagegen den **gesamten** Fortschritt und ist hier nicht gemeint.
 
 ---
 
@@ -484,6 +539,7 @@ Alles liegt im Browser des Geräts. **Es gibt keine Übertragung an einen Server
 | `adventLeseWarm26` | localStorage | „Warm & gedimmt“ an/aus |
 | `adventHerz26` | localStorage | Lieblingsgeschichten, je Türchen und Stimmung |
 | `adventErledigt26` | localStorage | als erledigt markierte verschiebbare Aufgaben |
+| `adventWetter26` | localStorage | zuletzt abgerufene Stundenwerte des Wetters (Wettercode, Temperatur) |
 | `adventErEditor26` | localStorage | Zwischenstand von `er-editor.html` (nur TEST) |
 
 - Funktioniert der Speicher nicht (privater Modus), arbeitet die Seite mit einem Ersatz im Arbeitsspeicher. Dann geht der Stand beim Schließen verloren.
@@ -533,7 +589,7 @@ Schutz gegen zufälliges Öffnen (z. B. durch die Kinder), kein echter Schutz ge
 - **Bilder (`/bilder/`):** zuerst aus dem Speicher.
 - Nur Anfragen an die eigene Adresse werden bearbeitet (die Wetter-Anfrage nicht).
 
-> **Bei jeder Änderung `VERSION` in `sw.js` erhöhen** (z. B. `const VERSION = "v1795424298";`). Ohne neue Version können Handys alte Bilder oder Seiten behalten.
+> **Bei jeder Änderung `VERSION` in `sw.js` erhöhen** (z. B. `const VERSION = "v1795431329";`). Ohne neue Version können Handys alte Bilder oder Seiten behalten.
 
 - Eine neue Version löscht beim Aktivieren den alten Speicher.
 - **Jedes Repository hat seine eigene `sw.js`**, in beiden die Version erhöhen.
@@ -646,6 +702,7 @@ Entwickelt und geprüft wurde mit Playwright in der Handy-Ansicht (390×844): Uh
 | Animationen | `portalDurch`, `wirbelUebergang`, `finaleDurch`, `wmAn`, `bildEinblenden` |
 | Startseite | `rulesAktualisieren`, `rulesUmschalten`, `vorabUmschalten`, `ladeErinnerung`, Countdown |
 | Übersicht | `begruessungWaehlen`, `begruessungZeigen`, `teaserAktualisieren` |
+| Wetter (`wetter.js`) | `wetterErsetzen`, `wetterAktualisieren`, `wetterLaden`, `klasseVon`, `aktuell`, `tempWort`; Texte in `window.WETTER_TEXTE` |
 | Komfort (eigenes Skript am Dateiende) | `leseAnwenden`, `leseSchrift`, `leseWarmSetzen`, `herzUmschalten`, `herzOeffnen`, `erledigtUmschalten`, `erledigtRendern`, `offeneTage`, `cdAktualisieren`, `uebersichtErgaenzen`, `storyErgaenzen`, `tonSpielen`; Liste `VERSCHIEBBAR` |
 | Wolke | Skript mit `bossOeffnen`, `schliessen`, Wetterabruf |
 | Sonstiges | `seiteAktualisieren` (Tab-Titel/Symbol), Lesefortschritt, Service-Worker-Registrierung |
@@ -669,6 +726,7 @@ Grob in der Reihenfolge der Entstehung:
 11. **Code-Sperre** beim Start, nach Pause und nach der Wolke, mit leicht verpixeltem Hintergrundbild, das sich beim Entsperren entpixelt (TEST und LIVE).
 12. **Begleitmaterial:** Beipackzettel (v9, mit Code und Päckchen-Hinweis), Gimmick-Vorlagen (Zettel für einzelne Türchen, Code-Zettel, Zettel für den zweiten Kalender), Röhren-Packliste, Kurzbeschreibungen-Tabelle, Prompt für den zweiten Kalender.
 13. **Zweiter Kalender** „Adventsgeschichten“ (nicht erotisch) in einem eigenen Projekt.
+14b. **Wetter in den Geschichten** (Abschnitt 7.9): Wettersätze passen sich dem echten Wetter an; Vorschau per `?wetter=…`. **Status: in TEST und LIVE umgesetzt.**
 14. **Komfort-Funktionen** (Abschnitt 7.8): Lesen anpassen, Countdown, offene Aufgaben mit Frist 31.12., Lieblingsgeschichten, Tür-Knarren. **Status: in TEST und LIVE umgesetzt.**
 
 ---
@@ -747,6 +805,8 @@ Warum es so gebaut ist, wie es ist:
 - **Nachholen nur bei sieben Karten:** Nur Aufgaben, die sich sinnvoll verschieben lassen (Karten 3, 4, 8, 15, 17, 19, 23), bekommen die Erledigt-Funktion; bei allen anderen gilt „heute“.
 - **Ein Herz je Geschichte und Stimmung:** Keine Mehrfachvergabe pro Türchen, dafür darf nach dem 25.12. jede gelesene Stimmung ein eigenes Herz bekommen.
 - **Ton immer aktiv, ohne Schalter:** Gewollter Überraschungseffekt; leiser machen geht über die Handy-Lautstärke. Ohne Audiodatei im Repository passiert nichts.
+- **Wetter folgt der Realität, Handlung bleibt fest:** Nur Nebenbei-Wetter wird angepasst. Wo das Wetter die Szene trägt (Frost, Schneetag, Sturm, Regentag), bleibt der Text, sonst müsste die Geschichte neu geschrieben werden.
+- **Wetter der Lesestunde, nicht der Szene:** Es zählt, was Anja gerade draußen sieht; deshalb Open-Meteo stündlich und kein Abruf am Vortag (der würde nur bei geöffneter App klappen und ist ungenauer).
 - **Kein Übertragen des Stands zwischen Geräten:** Ein Export/Import wurde erwogen und verworfen (nicht nötig).
 
 ---
