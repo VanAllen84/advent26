@@ -19,7 +19,7 @@ Dazu gehören gedruckte Teile (24 Faltkarten, Beipackzettel, Röllchen, Päckche
 |---|---|
 | **LIVE** | https://kalender2026.tkagel.de |
 
-Stand dieser Beschreibung: November 2026, Service-Worker-Version `v1795431329`.
+Stand dieser Beschreibung: November 2026, Service-Worker-Version `v1795432056`.
 
 ---
 
@@ -255,7 +255,19 @@ Sichtbar, wenn für den Tag noch keine Stimmung gewählt wurde.
 - Am Ende: **„Der heutige Umschlag hat die Nummer: #N“** (`karteninfoSetzen`).
 - **Bild** des Tages (`karte-NN.jpg`) blendet beim Lesen ein, zusätzlich liegt es als dezentes **Wasserzeichen** im Hintergrund.
 - Oben (am Folgetag): **Abfrage zum Vortag** („Wie war gestern die Aufgabe?“) mit **Originaltext der Aufgabe und der Alternative** und je drei Daumen-Knöpfen.
-- Unten: **Bewertungskasten** („Wie war es?“) und **Notizfeld** („Meine Notiz zur Aktion (nur für dich)“). Bei der Bewertung am selben Tag steht dort **kein** Aufgabentext, damit nichts vorweggenommen wird. Beim erneuten Öffnen eines vergangenen Türchens steht der Text dort.
+- Unten: **Bewertungskasten** („Wie war es?“) und **Notizfeld** („Meine Notiz zur Aktion (nur für dich)“). Bei der Bewertung am selben Tag steht dort **kein** Aufgabentext, damit nichts vorweggenommen wird. Der Text steht dort erst, wenn das Türchen schon an einem **früheren Tag** einmal geöffnet war (siehe „Wann der Aufgabentext erscheint“ unten). Wer an einem späteren Tag ein Türchen zum ersten Mal öffnet, sieht ihn noch nicht.
+
+**Wann der Aufgabentext erscheint:** Der Wortlaut von Aufgabe und Alternative steht im Bewertungskasten (und im Banner zum Vortag) nur, wenn das Türchen an einem **früheren Kalendertag** schon einmal geöffnet war. Gespeichert wird dafür der Tag der ersten Öffnung (`adventOeffnetAm26`).
+
+| Situation | Text sichtbar? |
+|---|---|
+| Türchen heute zum ersten Mal geöffnet | nein |
+| Ein älteres Türchen (z. B. vom 18. am 20.) heute zum **ersten** Mal geöffnet | nein |
+| Dasselbe Türchen am nächsten Tag oder später erneut geöffnet | ja |
+| Dasselbe Türchen am selben Tag der ersten Öffnung noch einmal geöffnet | nein |
+| Ab dem 25.12. | ja, bei allen |
+
+Hintergrund: Wer ein Türchen verpasst und nachholt, soll die Aufgabe erst als Überraschung lesen (in der Geschichte) und nicht schon vorher im Kasten. Bewerten ist weiterhin möglich. Die Bewertung selbst ist davon unabhängig.
 - **Weiter-Knopf** (siehe Abschnitt 5).
 - Lesefortschritt und Leseposition (`adventLese26`) werden gespeichert.
 
@@ -461,7 +473,7 @@ Die Kurzbeschreibungen selbst stehen bewusst nicht in dieser Beschreibung (siehe
 - Möglich: nur Aufgabe, nur Alternative oder beides.
 - **Am Folgetag** erscheint oben die Abfrage zum Vortag (Banner) mit dem **Originaltext** der Aufgabe und Alternative.
 - Eine abgegebene Bewertung lässt sich **noch bis zum Tag danach ändern**, danach ist sie festgeschrieben (außer ab 25.12.).
-- **Nachholen:** Türchen noch einmal öffnen; der Bewertungskasten steht unten. Bei vergangenen Tagen mit dem Aufgabentext.
+- **Nachholen:** Türchen noch einmal öffnen; der Bewertungskasten steht unten. Der Aufgabentext erscheint nur, wenn das Türchen schon an einem früheren Tag offen war.
 - Speicherung: `adventBewertung26` (Werte 1, 0, -1) und `adventBewDatum26` (wann bewertet).
 
 ### 13.2 Notizen
@@ -525,6 +537,7 @@ Alles liegt im Browser des Geräts. **Es gibt keine Übertragung an einen Server
 | Schlüssel | Speicher | Inhalt |
 |---|---|---|
 | `adventGeoeffnet26` | localStorage | geöffnete Türchen, z. B. `[1,2,3]` |
+| `adventOeffnetAm26` | localStorage | Tag der ersten Öffnung je Türchen als Zahl `JJJJMMTT`, z. B. `{"18":20261218}` (bestimmt, wann der Aufgabentext erscheint) |
 | `adventWahl26` | localStorage | gewählte Stimmung je Tag (`v`), ursprüngliche Wahl (`o`) |
 | `adventBewertung26` | localStorage | Bewertungen `{tag: {a: 1\|0\|-1, b: …}}` |
 | `adventBewDatum26` | localStorage | Datum der Bewertung (für die Änderungsfrist) |
@@ -589,7 +602,7 @@ Schutz gegen zufälliges Öffnen (z. B. durch die Kinder), kein echter Schutz ge
 - **Bilder (`/bilder/`):** zuerst aus dem Speicher.
 - Nur Anfragen an die eigene Adresse werden bearbeitet (die Wetter-Anfrage nicht).
 
-> **Bei jeder Änderung `VERSION` in `sw.js` erhöhen** (z. B. `const VERSION = "v1795431329";`). Ohne neue Version können Handys alte Bilder oder Seiten behalten.
+> **Bei jeder Änderung `VERSION` in `sw.js` erhöhen** (z. B. `const VERSION = "v1795432056";`). Ohne neue Version können Handys alte Bilder oder Seiten behalten.
 
 - Eine neue Version löscht beim Aktivieren den alten Speicher.
 - **Jedes Repository hat seine eigene `sw.js`**, in beiden die Version erhöhen.
@@ -722,7 +735,7 @@ Grob in der Reihenfolge der Entstehung:
 7. **Kurzbeschreibungen** der Aufgaben unter geöffneten Türchen.
 8. **Regelkasten der Startseite** auf sieben Punkte erweitert (Bewerten, Notizen, Nachholen, ab 25.12. inkl. Abgleich und Export).
 9. **Weiter-Knopf** erscheint nur, wenn das nächste Türchen freigeschaltet ist.
-10. **Rückblick auf die Aufgabe:** Beim Bewerten am Folgetag oder beim erneuten Öffnen eines vergangenen Türchens stehen Aufgabe und Alternative im Originalwortlaut dabei (nie am selben Tag).
+10. **Rückblick auf die Aufgabe:** Beim Bewerten am Folgetag oder beim erneuten Öffnen eines vergangenen Türchens stehen Aufgabe und Alternative im Originalwortlaut dabei (nie am Tag der ersten Öffnung).
 11. **Code-Sperre** beim Start, nach Pause und nach der Wolke, mit leicht verpixeltem Hintergrundbild, das sich beim Entsperren entpixelt (TEST und LIVE).
 12. **Begleitmaterial:** Beipackzettel (v9, mit Code und Päckchen-Hinweis), Gimmick-Vorlagen (Zettel für einzelne Türchen, Code-Zettel, Zettel für den zweiten Kalender), Röhren-Packliste, Kurzbeschreibungen-Tabelle, Prompt für den zweiten Kalender.
 13. **Zweiter Kalender** „Adventsgeschichten“ (nicht erotisch) in einem eigenen Projekt.
@@ -791,7 +804,7 @@ Warum es so gebaut ist, wie es ist:
 - **Eine einzige `index.html`:** Einfach zu sichern, zu patchen und hochzuladen, ohne Build-Schritt.
 - **Stimmung wird pro Tag festgeschrieben:** Die Geschichte soll ein Ereignis sein, kein Durchklicken. Erst ab dem 25.12. dürfen die anderen Versionen gelesen werden.
 - **Erst Geschichte, dann Umschlag:** Die Stimmung soll da sein, bevor es ernst wird. Der Umschlag wird erst nach der Geschichte gezogen; Päckchen erst nach dem Lesen der Aufgabe.
-- **Bewertung erst am Folgetag und änderbar:** Anja soll es wirken lassen können. Der Aufgabentext wird beim Bewerten wiederholt, weil man nach Stunden oder am nächsten Morgen nicht mehr genau weiß, was gemeint war. Am selben Tag wird er nicht gezeigt, um nichts vorwegzunehmen.
+- **Bewertung erst am Folgetag und änderbar:** Anja soll es wirken lassen können. Der Aufgabentext wird beim Bewerten wiederholt, weil man nach Stunden oder am nächsten Morgen nicht mehr genau weiß, was gemeint war. Am Tag der ersten Öffnung wird er nicht gezeigt, um nichts vorwegzunehmen.
 - **Thilos Bewertung in `er.js`:** Sie wird erst ab dem 25.12. geladen und läuft über eine eigene Oberfläche (`er-editor.html`), damit weder er ihre noch sie seine Bewertung vorher sieht. Das ist kein technischer Schutz (die Datei liegt im Repository), sondern eine Vereinbarung.
 - **Notizen nur lokal:** Persönlich und nur für Anja. Sie wandern nur dann in eine Datei, wenn sie „Erinnerung speichern“ drückt.
 - **Code-Sperre statt Face ID:** Face ID über WebAuthn wäre aufwendig, für die Erstnutzung ungewohnt und ohne Server ohnehin nur ein Sichtschutz. Die iOS-eigene App-Sperre wird für Web-Apps nicht angeboten. Ein fester vierstelliger Code reicht gegen zufälliges Öffnen (Kinder) und kann nicht verloren gehen (kein Aussperren, anders als bei einem selbst vergebenen Code).
