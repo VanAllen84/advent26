@@ -1,6 +1,6 @@
-# Adventskalender 2026 – LIVE-Version
+# Erotischer Adventskalender 2026 – LIVE-Version
 
-Persönlicher Adventskalender für Anja („Schatz“), geschrieben und gebaut von Thilo. Alles auf Deutsch.
+Persönlicher, erotischer Adventskalender für Anja („Schatz“), geschrieben und gebaut von Thilo. Alles auf Deutsch.
 Eine statische Web-App aus HTML, CSS und JavaScript, **ohne Server-Logik, ohne Datenbank, ohne Anmeldung**. Alles, was sie eingibt oder auswählt, bleibt im Browser ihres Geräts.
 
 Vom 1. bis 24. Dezember öffnet sich jeden Tag ein Türchen. Dahinter steckt:
@@ -19,7 +19,7 @@ Dazu gehören gedruckte Teile (24 Faltkarten, Beipackzettel, Röllchen, Päckche
 |---|---|
 | **LIVE** | https://kalender2026.tkagel.de |
 
-Stand dieser Beschreibung: November 2026, Service-Worker-Version `v1795415889`.
+Stand dieser Beschreibung: November 2026, Service-Worker-Version `v1795423587`.
 
 ---
 
@@ -267,6 +267,15 @@ Siehe [Abschnitt 13](#13-bewertung-notizen-und-auswertung).
 ### 7.7 Browser-Tab
 Titel und Symbol wechseln mit der Seite („Intro“, „Die Türchen“, „N. Dezember“, „Auswertung“, „Finale“; in der Wolke „Wetter“, in der Sperre „Dezember“). Die Farbe der Browserleiste (`theme-color`) folgt dem Hintergrund.
 
+### 7.8 Komfort-Funktionen (Dezember-Ergänzung)
+**Status: in TEST und LIVE umgesetzt.**
+
+- **Lesen anpassen („Aa“):** Kleiner runder Knopf unten rechts auf der Geschichtsseite. Drei Schriftgrößen und der Schalter „Warm & gedimmt“ (leichter Orangeton, abgedunkelt, abends augenschonend). Die Wahl wird gespeichert und gilt für die ganze App (`adventLeseFs26`, `adventLeseWarm26`).
+- **Countdown:** Auf der Türchen-Übersicht steht „Das nächste Türchen öffnet sich in 5 Std 12 Min“. Vor dem 1. Dezember bezieht er sich auf Türchen 1. Er erscheint nur, wenn das heutige Türchen schon geöffnet wurde; am 24.12. übernimmt der bekannte Hinweis „Morgen wartet noch etwas“, ab dem 25.12. gibt es keinen Countdown mehr. Aktualisierung alle 30 Sekunden.
+- **Offene Aufgaben (nur verschiebbare Karten):** Verschiebbar sind nur die Karten 3, 4, 8, 15, 17, 19 und 23 (das sind die Türchen 7, 15, 1, 24, 8, 16 und 2). Nur dort steht unter der Bewertung der Knopf „Aufgabe erledigt?“ mit dem Hinweis, dass sie bis zum 31. Dezember nachgeholt werden darf. Wird bewertet, gilt die Aufgabe automatisch als erledigt. Offene Türchen erhalten ein Sanduhr-Zeichen auf der Kachel und eine Zeile „Noch offen bis 31. Dezember: Türchen …“ mit direkten Sprungknöpfen. Nach dem 31.12. verschwindet alles.
+- **Lieblingsgeschichten (Herz):** Unter jeder Geschichte ein Herz-Knopf „Diese Geschichte gefällt mir“. Ein Herz je Türchen und Stimmung; weitere Stimmungen kann sie erst ab dem 25.12. lesen und dann auch dort ein Herz vergeben (dieselbe Geschichte kann also mehrfach in der Liste stehen). Herzchen erscheinen auf der Kachel; ab dem 25.12. zeigt die Übersicht den Bereich „Meine Lieblingsgeschichten“ (Sprungknöpfe zu Türchen und Stimmung).
+- **Tür-Knarren:** Liegt die Datei `ton/knarren.mp3` im Repository, spielt sie beim Öffnen eines Türchens (immer aktiv, kein Schalter; wer es leise will, stellt die Lautstärke am Handy herunter). Fehlt die Datei, passiert nichts (kein Fehler). Die Datei steht bewusst **nicht** in der Vorab-Liste des Service Workers, damit eine fehlende Datei die Installation nicht verhindert. Hinweis: Normales Audio-Abspielen wird vom iPhone-Stumm-Schalter meist nicht unterdrückt (nicht auf einem echten Gerät geprüft).
+
 ---
 
 ## 8. Animationen
@@ -470,11 +479,15 @@ Alles liegt im Browser des Geräts. **Es gibt keine Übertragung an einen Server
 | `adventFinaleAn26` | localStorage | Finale-Animation gelaufen |
 | `adventSpaeter26` | localStorage | „Später bewerten“ (nur Altlast) |
 | `adventSperreTs26` | sessionStorage | Zeitpunkt der letzten Nutzung (für die Sperre) |
+| `adventLeseFs26` | localStorage | Schriftgröße (0, 1, 2) |
+| `adventLeseWarm26` | localStorage | „Warm & gedimmt“ an/aus |
+| `adventHerz26` | localStorage | Lieblingsgeschichten, je Türchen und Stimmung |
+| `adventErledigt26` | localStorage | als erledigt markierte verschiebbare Aufgaben |
 | `adventErEditor26` | localStorage | Zwischenstand von `er-editor.html` (nur TEST) |
 
 - Funktioniert der Speicher nicht (privater Modus), arbeitet die Seite mit einem Ersatz im Arbeitsspeicher. Dann geht der Stand beim Schließen verloren.
 - **iPhone:** Die installierte Web-App hat **einen anderen Speicher** als Safari.
-- **Zurücksetzen** mit `?reset=1` (Abschnitt 24). Es löscht Geöffnet, Wahl, Bewertungen, Datum, Später, Notizen und Gelesen. **Nicht** gelöscht werden Begrüßung, Wolken-Hinweis und Finale-Marker.
+- **Zurücksetzen** mit `?reset=1` (Abschnitt 24). Es löscht Geöffnet, Wahl, Bewertungen, Datum, Später, Notizen, Erledigt, Herzen und Gelesen. **Nicht** gelöscht werden Begrüßung, Wolken-Hinweis und Finale-Marker.
 - Löscht Anja die Browserdaten oder wechselt das Gerät, sind alle ihre Daten weg.
 
 ---
@@ -519,7 +532,7 @@ Schutz gegen zufälliges Öffnen (z. B. durch die Kinder), kein echter Schutz ge
 - **Bilder (`/bilder/`):** zuerst aus dem Speicher.
 - Nur Anfragen an die eigene Adresse werden bearbeitet (die Wetter-Anfrage nicht).
 
-> **Bei jeder Änderung `VERSION` in `sw.js` erhöhen** (z. B. `const VERSION = "v1795415889";`). Ohne neue Version können Handys alte Bilder oder Seiten behalten.
+> **Bei jeder Änderung `VERSION` in `sw.js` erhöhen** (z. B. `const VERSION = "v1795423587";`). Ohne neue Version können Handys alte Bilder oder Seiten behalten.
 
 - Eine neue Version löscht beim Aktivieren den alten Speicher.
 - **Jedes Repository hat seine eigene `sw.js`**, in beiden die Version erhöhen.
@@ -632,6 +645,7 @@ Entwickelt und geprüft wurde mit Playwright in der Handy-Ansicht (390×844): Uh
 | Animationen | `portalDurch`, `wirbelUebergang`, `finaleDurch`, `wmAn`, `bildEinblenden` |
 | Startseite | `rulesAktualisieren`, `rulesUmschalten`, `vorabUmschalten`, `ladeErinnerung`, Countdown |
 | Übersicht | `begruessungWaehlen`, `begruessungZeigen`, `teaserAktualisieren` |
+| Komfort (eigenes Skript am Dateiende) | `leseAnwenden`, `leseSchrift`, `leseWarmSetzen`, `herzUmschalten`, `herzOeffnen`, `erledigtUmschalten`, `erledigtRendern`, `offeneTage`, `cdAktualisieren`, `uebersichtErgaenzen`, `storyErgaenzen`, `tonSpielen`; Liste `VERSCHIEBBAR` |
 | Wolke | Skript mit `bossOeffnen`, `schliessen`, Wetterabruf |
 | Sonstiges | `seiteAktualisieren` (Tab-Titel/Symbol), Lesefortschritt, Service-Worker-Registrierung |
 
@@ -654,6 +668,7 @@ Grob in der Reihenfolge der Entstehung:
 11. **Code-Sperre** beim Start, nach Pause und nach der Wolke, mit leicht verpixeltem Hintergrundbild, das sich beim Entsperren entpixelt (TEST und LIVE).
 12. **Begleitmaterial:** Beipackzettel (v9, mit Code und Päckchen-Hinweis), Gimmick-Vorlagen (Zettel für einzelne Türchen, Code-Zettel, Zettel für den zweiten Kalender), Röhren-Packliste, Kurzbeschreibungen-Tabelle, Prompt für den zweiten Kalender.
 13. **Zweiter Kalender** „Adventsgeschichten“ (nicht erotisch) in einem eigenen Projekt.
+14. **Komfort-Funktionen** (Abschnitt 7.8): Lesen anpassen, Countdown, offene Aufgaben mit Frist 31.12., Lieblingsgeschichten, Tür-Knarren. **Status: in TEST und LIVE umgesetzt.**
 
 ---
 
@@ -728,6 +743,10 @@ Warum es so gebaut ist, wie es ist:
 - **Kurzbeschreibungen unter den Kacheln:** Damit sie nach Tagen noch weiß, was sie bewerten möchte.
 - **Weiter-Knopf nur bei freigeschaltetem Folgetürchen:** Ein Knopf, der nur „noch nicht“ sagt, wirkt kaputt.
 - **Kein Backend für Thilos Bewertung und keine Statistik:** Bewusst einfach gehalten.
+- **Nachholen nur bei sieben Karten:** Nur Aufgaben, die sich sinnvoll verschieben lassen (Karten 3, 4, 8, 15, 17, 19, 23), bekommen die Erledigt-Funktion; bei allen anderen gilt „heute“.
+- **Ein Herz je Geschichte und Stimmung:** Keine Mehrfachvergabe pro Türchen, dafür darf nach dem 25.12. jede gelesene Stimmung ein eigenes Herz bekommen.
+- **Ton immer aktiv, ohne Schalter:** Gewollter Überraschungseffekt; leiser machen geht über die Handy-Lautstärke. Ohne Audiodatei im Repository passiert nichts.
+- **Kein Übertragen des Stands zwischen Geräten:** Ein Export/Import wurde erwogen und verworfen (nicht nötig).
 
 ---
 
