@@ -1,6 +1,6 @@
-# Erotischer Adventskalender 2026 – LIVE-Version
+# Adventskalender 2026 – LIVE-Version
 
-Persönlicher, erotischer Adventskalender für Anja („Schatz“), geschrieben und gebaut von Thilo. Alles auf Deutsch.
+Persönlicher Adventskalender für Anja („Schatz“), geschrieben und gebaut von Thilo. Alles auf Deutsch.
 Eine statische Web-App aus HTML, CSS und JavaScript, **ohne Server-Logik, ohne Datenbank, ohne Anmeldung**. Alles, was sie eingibt oder auswählt, bleibt im Browser ihres Geräts.
 
 Vom 1. bis 24. Dezember öffnet sich jeden Tag ein Türchen. Dahinter steckt:
