@@ -19,7 +19,7 @@ Dazu gehören gedruckte Teile (24 Faltkarten, Beipackzettel, Röllchen, Päckche
 |---|---|
 | **LIVE** | https://kalender2026.tkagel.de |
 
-Stand dieser Beschreibung: November 2026, Service-Worker-Version `v1795437849`.
+Stand dieser Beschreibung: November 2026, Service-Worker-Version `v1795446903`.
 
 ---
 
@@ -510,7 +510,7 @@ Die Kurzbeschreibungen selbst stehen bewusst nicht in dieser Beschreibung (siehe
   - 🙂 **Solide:** beide 😐
   - ⚠️ **Flops:** einer 😐, der andere 👎
   - 🚫 **No-Gos:** beide 👎
-- Zusätzlich: „Bisher nur von dir bewertet“, „nur von mir bewertet“, „noch von keinem bewertet“.
+- Zusätzlich: „Bisher nur von dir bewertet“ und „Noch nicht von dir bewertet“. Seine Bewertungen erscheinen nur bei Aufgaben oder Alternativen, die sie selbst bewertet hat. Ob er etwas bewertet hat, das sie noch nicht bewertet hat, erfährt sie nicht.
 - Ohne `er.js` zeigt die Auswertung nur Anjas eigene Bewertungen.
 - Die Auswertung blättert gruppenweise („Weiter: …“).
 
@@ -633,7 +633,7 @@ Schutz gegen zufälliges Öffnen (z. B. durch die Kinder), kein echter Schutz ge
 - **Bilder (`/bilder/`):** zuerst aus dem Speicher.
 - Nur Anfragen an die eigene Adresse werden bearbeitet (die Wetter-Anfrage nicht).
 
-> **Bei jeder Änderung `VERSION` in `sw.js` erhöhen** (z. B. `const VERSION = "v1795437849";`). Ohne neue Version können Handys alte Bilder oder Seiten behalten.
+> **Bei jeder Änderung `VERSION` in `sw.js` erhöhen** (z. B. `const VERSION = "v1795446903";`). Ohne neue Version können Handys alte Bilder oder Seiten behalten.
 
 - Eine neue Version löscht beim Aktivieren den alten Speicher.
 - **Jedes Repository hat seine eigene `sw.js`**, in beiden die Version erhöhen.
