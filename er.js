@@ -1,5 +1,5 @@
 // ==========================================================
-//  ER-BEWERTUNG (Thilo)  -  wird erst ab dem 25. Dezember geladen
+//  ER-BEWERTUNG  -  wird erst ab dem 25. Dezember geladen
 //
 //  Pro Türchen stehen zwei Angaben in den eckigen Klammern:
 //     1. Angabe = Die Aufgabe (Option A)
