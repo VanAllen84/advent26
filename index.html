@@ -1825,11 +1825,22 @@
         }
         // meldet dem Server, dass das heutige Tuerchen offen ist (dann kommt heute keine Erinnerung mehr)
         let pushGemeldet = "";
+        // Erinnerungen dieses Kalenders aus dem Sperrbildschirm entfernen (erst, wenn das heutige Türchen wirklich geöffnet ist)
+        function pushMitteilungenWeg() {
+            try {
+                if (!("serviceWorker" in navigator)) return;
+                navigator.serviceWorker.getRegistration().then(function (r) {
+                    if (!r || !r.getNotifications) return;
+                    return r.getNotifications({ tag: "tuerchen" }).then(function (l) { l.forEach(function (n) { n.close(); }); });
+                }).catch(function () {});
+            } catch (e) {}
+        }
         function pushOffenSync(force) {
             try {
                 if (!pushStand() || !pushConf()) return;
                 const h = (typeof heuteTag === "function") ? heuteTag() : 0;
                 if (!h || geoeffnetListe().indexOf(h) < 0) return;
+                pushMitteilungenWeg();   // heutiges Tuerchen ist geoeffnet: Erinnerung im Sperrbildschirm wegraeumen
                 const tag = String(datumZahl());
                 if (!force && pushGemeldet === tag) return;
                 pushGemeldet = tag;
@@ -1865,7 +1876,13 @@
             if (typeof waehleTag !== "function" || !document.getElementById("tuerenGridContainer")) return;
             window.__deepLink = null;
             try { history.replaceState(null, "", location.pathname + location.hash); } catch (e) {}
-            const tag = w === "heute" ? heuteTag() : parseInt(w, 10);
+            let tag = w === "heute" ? heuteTag() : parseInt(w, 10);
+            // Nur Vortest (November als Dezember): ist "heute" kein Türchen (Tag > 24), das erste noch nicht geöffnete nehmen
+            if (w === "heute" && !tag && typeof VORTEST_NOVEMBER !== "undefined" && VORTEST_NOVEMBER) {
+                const off = geoeffnetListe().map(Number);
+                for (let i = 1; i <= 24; i++) { if (off.indexOf(i) < 0) { tag = i; break; } }
+                if (!tag) tag = 1 + Math.floor(Math.random() * 24);
+            }
             if (!(tag >= 1 && tag <= 24) || !(testModus || tagOffen(tag))) return;
             const sichtbar = function (id) { const e = document.getElementById(id); return e && !e.classList.contains("hidden"); };
             if (sichtbar("storyScreen") || sichtbar("setupScreen") || sichtbar("finaleScreen") || sichtbar("auswertungScreen")) return;
